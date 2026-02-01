@@ -18,7 +18,7 @@ This is the backend for the AI Threat Hunter application, built with Django, Dja
 1.  **Clone the repository**:
     ```bash
     git clone <repository_url>
-    cd core
+    cd django-backend
     ```
 
 2.  **Create and activate a virtual environment**:
