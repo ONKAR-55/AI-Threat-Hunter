@@ -32,7 +32,7 @@ This is the backend for the AI Threat Hunter application, built with Django, Dja
 
 3.  **Install dependencies**:
     ```bash
-    pip install daphne channels channels_redis django-cors-headers djangorestframework joblib numpy scikit-learn
+    pip install daphne channels channels_redis django-cors-headers djangorestframework djangorestframework-simplejwt joblib numpy scikit-learn
     ```
 
 4.  **Run Migrations**:

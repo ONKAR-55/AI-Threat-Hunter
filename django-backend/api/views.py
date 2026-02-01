@@ -20,3 +20,7 @@ def ingest_log(request):
         return Response({"status": "Threat Detected & Logged"})
     
     return Response({"status": "Traffic Safe"})
+@api_view(['GET'])
+def get_threats(request):
+    threats = Threat.objects.all().order_by('-timestamp').values()
+    return Response(list(threats))

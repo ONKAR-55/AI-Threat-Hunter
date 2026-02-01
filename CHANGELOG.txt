@@ -1,0 +1,27 @@
+# Project Change Log
+
+## [Backend] Initial Setup & Configuration
+- Set up Django project structure.
+- Configured `core/settings.py` for `daphne`, `channels`, and `corsheaders`.
+- Configured `core/asgi.py` for WebSocket support.
+- Configured Redis Channel Layer.
+
+## [Backend] Real-Time Alerts
+- Created `api` app.
+- Implemented `DashboardConsumer` in `api/consumers.py` for WebSocket communication.
+- Configured WebSocket routing in `api/routing.py`.
+- Implemented `post_save` signal in `api/signals.py` to broadcast new threats.
+
+## [Backend] AI Engine Integration
+- Created `api/ai_engine.py` to load `threat_model.pkl` and predict threats.
+- Implemented `ingest_log` endpoint in `api/views.py` to analyze traffic.
+
+## [Backend] Authentication
+- Installed `djangorestframework-simplejwt`.
+- Configured generic JWT Authentication in `core/settings.py` (`DEFAULT_AUTHENTICATION_CLASSES`).
+- Added `api/token/` and `api/token/refresh/` endpoints in `core/urls.py`.
+
+## [Backend] Enhancements
+- Added `GET /api/threats/` endpoint for retrieving threat history.
+- Created `README_BACKEND.md`.
+- Organized project into `django-backend` folder.
