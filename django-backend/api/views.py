@@ -24,3 +24,26 @@ def ingest_log(request):
 def get_threats(request):
     threats = Threat.objects.all().order_by('-timestamp').values()
     return Response(list(threats))
+
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import IsAuthenticated
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request):
+    # Dummy data for traffic (until we build the traffic logger)
+    traffic_in = "1.2 GB"
+    traffic_out = "450 MB"
+    
+    # Check if BlockedIP model exists, otherwise return 0
+    blocked_ips_count = 0
+    # if 'BlockedIP' in globals():
+    #     blocked_ips_count = BlockedIP.objects.count()
+    
+    return Response({
+        "total_threats": Threat.objects.count(),
+        "high_severity": Threat.objects.filter(severity='CRITICAL').count(),
+        "blocked_ips": blocked_ips_count,
+        "traffic_in": traffic_in,
+        "traffic_out": traffic_out
+    })
