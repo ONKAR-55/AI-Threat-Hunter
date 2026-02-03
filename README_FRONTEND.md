@@ -38,6 +38,7 @@ This is the frontend for the AI Threat Hunter, built with Next.js 15, Tailwind C
     -   Login at `http://localhost:3000/login`.
     -   **Overview**: `http://localhost:3000/dashboard`.
     -   **Live Monitor**: `http://localhost:3000/dashboard/live`.
+    -   **Blocked IPs**: `http://localhost:3000/dashboard/blocked`.
 
 ## Usage
 
