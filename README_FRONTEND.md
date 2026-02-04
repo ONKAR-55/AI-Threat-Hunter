@@ -36,11 +36,13 @@ This is the frontend for the AI Threat Hunter, built with Next.js 15, Tailwind C
 2.  **Access the App**:
     -   Open via `http://localhost:3000`.
     -   Login at `http://localhost:3000/login`.
-    -   View Dashboard at `http://localhost:3000/dashboard`.
+    -   **Overview**: `http://localhost:3000/dashboard`.
+    -   **Live Monitor**: `http://localhost:3000/dashboard/live`.
+    -   **Blocked IPs**: `http://localhost:3000/dashboard/blocked`.
 
 ## Usage
 
 1.  Go to `/login`.
 2.  Enter your backend credentials (e.g., `admin` / `password`).
-3.  Upon success, you are redirected to `/dashboard`.
-4.  The dashboard connects to the Backend WebSocket and listens for alerts.
+3.  Upon success, you are redirected to `/dashboard` (Overview).
+4.  Use the Sidebar to navigate to "Live Monitor" for real-time alerts.

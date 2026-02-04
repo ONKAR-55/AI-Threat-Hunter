@@ -1,73 +1,87 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Shield, AlertTriangle, Activity, Terminal } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { AlertTriangle, ShieldAlert, Server, ArrowUp, ArrowDown } from 'lucide-react';
 
-export default function SOCDashboard() {
-    const [threats, setThreats] = useState<any[]>([]);
-    const [status, setStatus] = useState("DISCONNECTED");
+export default function DashboardHome() {
+    const [stats, setStats] = useState<any>(null);
+    const router = useRouter();
 
     useEffect(() => {
-        // 1. Connect to your Django WebSocket
-        const socket = new WebSocket('ws://127.0.0.1:8000/ws/alerts/');
+        const fetchStats = async () => {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                router.push('/login');
+                return;
+            }
 
-        socket.onopen = () => {
-            console.log("Connected to SOC Backend");
-            setStatus("LIVE MONITORING");
+            try {
+                const res = await fetch('http://127.0.0.1:8000/api/stats/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (res.status === 401) {
+                    router.push('/login');
+                } else {
+                    const data = await res.json();
+                    setStats(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch stats");
+            }
         };
 
-        socket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            // 2. Add new threat to the TOP of the list
-            setThreats((prev) => [data, ...prev]);
-        };
+        fetchStats();
+    }, [router]);
 
-        socket.onclose = () => setStatus("OFFLINE");
-
-        return () => socket.close();
-    }, []);
+    if (!stats) return <div className="p-10">Loading Command Center...</div>;
 
     return (
-        <div className="min-h-screen bg-black text-green-500 font-mono p-10">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-10 border-b border-green-800 pb-4">
-                <h1 className="text-4xl font-bold flex items-center gap-2">
-                    <Shield className="w-10 h-10" /> AI THREAT HUNTER
-                </h1>
-                <div className={`px-4 py-2 rounded font-bold ${status === "LIVE MONITORING" ? "bg-green-900 text-green-300 animate-pulse" : "bg-red-900 text-red-300"}`}>
-                    ● {status}
-                </div>
-            </div>
+        <div>
+            <h1 className="text-3xl font-bold mb-8 text-white">System Overview</h1>
 
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                {/* Left Panel: Statistics */}
-                <div className="border border-green-800 p-6 rounded bg-gray-900 h-fit">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Activity /> THREAT METRICS</h2>
-                    <div className="text-6xl font-bold mb-2">{threats.length}</div>
-                    <div className="text-sm text-green-400 opacity-70">TOTAL THREATS DETECTED</div>
-                </div>
-
-                {/* Right Panel: Live Feed */}
-                <div className="lg:col-span-2">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Terminal /> REAL-TIME LOGS</h2>
-                    <div className="space-y-3">
-                        {threats.length === 0 && <p className="opacity-50">Waiting for network traffic...</p>}
-
-                        {threats.map((threat, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-900 border-l-4 border-red-500 p-4 shadow-lg animate-in slide-in-from-right">
-                                <div>
-                                    <div className="font-bold text-lg text-red-400">{threat.type}</div>
-                                    <div className="text-sm opacity-70">{threat.time}</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-bold">{threat.ip}</div>
-                                    <span className="text-xs bg-red-900 text-red-200 px-2 py-1 rounded">{threat.severity}</span>
-                                </div>
-                            </div>
-                        ))}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <StatCard
+                    title="Total Threats"
+                    value={stats.total_threats}
+                    icon={<ShieldAlert className="text-yellow-500" />}
+                />
+                <StatCard
+                    title="Critical Alerts"
+                    value={stats.high_severity}
+                    icon={<AlertTriangle className="text-red-600" />}
+                    isCritical
+                />
+                <StatCard
+                    title="Blocked IPs"
+                    value={stats.blocked_ips}
+                    icon={<Server className="text-blue-500" />}
+                />
+                <div className="bg-gray-900 p-6 rounded border border-green-900">
+                    <div className="text-gray-400 text-sm mb-2">Network Traffic</div>
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="flex gap-1 text-green-400"><ArrowDown size={16} /> {stats.traffic_in}</span>
+                        <span className="flex gap-1 text-blue-400"><ArrowUp size={16} /> {stats.traffic_out}</span>
                     </div>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+// Simple Card Component
+function StatCard({ title, value, icon, isCritical = false }: any) {
+    return (
+        <div className={`p-6 rounded border ${isCritical ? 'bg-red-950/30 border-red-900' : 'bg-gray-900 border-green-900'}`}>
+            <div className="flex justify-between items-start mb-2">
+                <span className="text-gray-400 text-sm">{title}</span>
+                {icon}
+            </div>
+            <div className={`text-3xl font-bold ${isCritical ? 'text-red-500' : 'text-white'}`}>
+                {value}
             </div>
         </div>
     );
