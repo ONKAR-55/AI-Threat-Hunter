@@ -15,6 +15,7 @@ def broadcast_threat(sender, instance, created, **kwargs):
                 "message": {
                     "id": instance.id,
                     "ip": instance.source_ip,
+                    "dst_ip": instance.destination_ip,
                     "type": instance.attack_type,
                     "severity": instance.severity,
                     "time": str(instance.timestamp)

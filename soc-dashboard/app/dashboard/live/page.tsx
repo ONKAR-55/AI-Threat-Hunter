@@ -1,73 +1,141 @@
 "use client";
 import { useEffect, useState } from 'react';
-import { Shield, Activity, Terminal } from 'lucide-react';
+import { Shield, AlertTriangle, Terminal, Ban, CheckCircle } from 'lucide-react';
 
-export default function LiveMonitor() {
+export default function LiveMonitorPage() {
     const [threats, setThreats] = useState<any[]>([]);
-    const [status, setStatus] = useState("DISCONNECTED");
+    const [status, setStatus] = useState("CONNECTING...");
+    const [blockedIPs, setBlockedIPs] = useState<Set<string>>(new Set()); // Tracks which IPs are blocked locally for UI feedback
 
     useEffect(() => {
-        // 1. Connect to your Django WebSocket
+        // 1. Connect to WebSocket
         const socket = new WebSocket('ws://127.0.0.1:8000/ws/alerts/');
 
-        socket.onopen = () => {
-            console.log("Connected to SOC Backend");
-            setStatus("LIVE MONITORING");
-        };
+        socket.onopen = () => setStatus("LIVE MONITORING");
+        socket.onclose = () => setStatus("OFFLINE");
 
         socket.onmessage = (e) => {
             const data = JSON.parse(e.data);
-            // 2. Add new threat to the TOP of the list
-            setThreats((prev) => [data, ...prev]);
+            setThreats((prev) => [data, ...prev].slice(0, 50)); // Keep last 50 only
         };
-
-        socket.onclose = () => setStatus("OFFLINE");
 
         return () => socket.close();
     }, []);
 
+    // 2. The Blocking Function
+    const handleBlock = async (ip: string, type: string) => {
+        const token = localStorage.getItem('accessToken');
+
+        try {
+            const res = await fetch('http://127.0.0.1:8000/api/block-ip/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    ip: ip,
+                    reason: `Immediate block via Live Monitor: ${type}`
+                })
+            });
+
+            if (res.ok) {
+                // Update UI immediately without reload
+                setBlockedIPs(prev => new Set(prev).add(ip));
+            } else {
+                alert("Failed to block IP");
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     return (
-        <div className="text-green-500 font-mono">
+        <div>
             {/* Header */}
-            <div className="flex justify-between items-center mb-10 border-b border-green-800 pb-4">
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <Terminal className="w-8 h-8" /> LIVE THREAT MONITOR
+            <div className="flex justify-between items-center mb-8 border-b border-green-900 pb-4">
+                <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+                    <Terminal className="text-green-500" /> Live Interceptor
                 </h1>
-                <div className={`px-4 py-2 rounded font-bold ${status === "LIVE MONITORING" ? "bg-green-900 text-green-300 animate-pulse" : "bg-red-900 text-red-300"}`}>
+                <div className={`px-4 py-2 rounded font-bold text-sm ${status.includes("LIVE") ? "bg-green-900/50 text-green-400 animate-pulse" : "bg-red-900 text-red-300"}`}>
                     ● {status}
                 </div>
             </div>
 
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                {/* Left Panel: Statistics */}
-                <div className="border border-green-800 p-6 rounded bg-gray-900 h-fit">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Activity /> SESSION METRICS</h2>
-                    <div className="text-6xl font-bold mb-2">{threats.length}</div>
-                    <div className="text-sm text-green-400 opacity-70">THREATS IN SESSION</div>
+            {/* Feed Grid */}
+            <div className="space-y-3">
+                {/* Categories Header */}
+                <div className="grid grid-cols-12 gap-4 px-4 py-2 text-gray-500 text-sm font-bold uppercase tracking-wider">
+                    <div className="col-span-3">Attack Type</div>
+                    <div className="col-span-2">Severity</div>
+                    <div className="col-span-3">Source IP</div>
+                    <div className="col-span-3">Destination IP</div>
+                    <div className="col-span-1 text-right">Action</div>
                 </div>
 
-                {/* Right Panel: Live Feed */}
-                <div className="lg:col-span-2">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Shield /> REAL-TIME LOGS</h2>
-                    <div className="space-y-3">
-                        {threats.length === 0 && <p className="opacity-50">Waiting for network traffic...</p>}
+                {threats.length === 0 && (
+                    <div className="text-center py-20 text-gray-600 border border-dashed border-gray-800 rounded">
+                        Waiting for network traffic...
+                    </div>
+                )}
 
-                        {threats.map((threat, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-900 border-l-4 border-red-500 p-4 shadow-lg animate-in slide-in-from-right">
-                                <div>
-                                    <div className="font-bold text-lg text-red-400">{threat.type}</div>
-                                    <div className="text-sm opacity-70">{threat.time}</div>
+                {threats.map((threat, index) => {
+                    const isBlocked = blockedIPs.has(threat.ip);
+
+                    return (
+                        <div key={index} className={`grid grid-cols-12 gap-4 items-center p-4 rounded border border-gray-800 shadow-lg transition-all hover:bg-gray-900 ${index === 0 ? 'animate-in slide-in-from-top duration-300 bg-gray-900/50' : 'bg-black'}`}>
+
+                            {/* Col 1-3: Attack Type */}
+                            <div className="col-span-3 flex items-center gap-3">
+                                <div className={`p-2 rounded-full ${threat.severity === 'CRITICAL' ? 'bg-red-900/20 text-red-500' : 'bg-yellow-900/20 text-yellow-500'}`}>
+                                    <Terminal size={20} />
                                 </div>
-                                <div className="text-right">
-                                    <div className="font-bold">{threat.ip}</div>
-                                    <span className="text-xs bg-red-900 text-red-200 px-2 py-1 rounded">{threat.severity}</span>
+                                <div>
+                                    <div className="font-bold text-gray-200">{threat.type}</div>
+                                    <div className="text-xs text-gray-500">{threat.time}</div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
+
+                            {/* Col 4-5: Severity */}
+                            <div className="col-span-2">
+                                <span className={`px-2 py-1 rounded text-xs font-bold flex items-center gap-1 w-fit ${threat.severity === 'CRITICAL'
+                                        ? 'bg-red-950 text-red-400 border border-red-900'
+                                        : 'bg-yellow-950 text-yellow-400 border border-yellow-900'
+                                    }`}>
+                                    {threat.severity === 'CRITICAL' ? <AlertTriangle size={12} /> : <Shield size={12} />}
+                                    {threat.severity}
+                                </span>
+                            </div>
+
+                            {/* Col 6-8: Source IP */}
+                            <div className="col-span-3 font-mono text-blue-400 text-sm flex items-center gap-2">
+                                <span className="text-gray-600">SRC:</span> {threat.ip}
+                            </div>
+
+                            {/* Col 9-11: Destination IP */}
+                            <div className="col-span-3 font-mono text-green-400 text-sm flex items-center gap-2">
+                                <span className="text-gray-600">DST:</span> {threat.dst_ip || '---'}
+                            </div>
+
+                            {/* Col 12: ACTION */}
+                            <div className="col-span-1 flex justify-end">
+                                {isBlocked ? (
+                                    <button disabled className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 text-gray-500 rounded font-bold cursor-not-allowed border border-gray-700 text-xs">
+                                        <CheckCircle size={14} />
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => handleBlock(threat.ip, threat.type)}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded font-bold transition-all shadow-[0_0_10px_rgba(220,38,38,0.5)] hover:shadow-[0_0_20px_rgba(220,38,38,0.8)] text-xs"
+                                        title="Block Source IP"
+                                    >
+                                        <Ban size={14} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

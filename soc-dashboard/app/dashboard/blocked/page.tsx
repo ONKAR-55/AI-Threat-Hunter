@@ -1,11 +1,19 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { ShieldBan, Trash2, Plus } from 'lucide-react';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 export default function BlockedIPsPage() {
     const [blockedIPs, setBlockedIPs] = useState<any[]>([]);
     const [newIP, setNewIP] = useState('');
     const [reason, setReason] = useState('');
+
+    // Modal State
+    const [modal, setModal] = useState<{
+        isOpen: boolean;
+        ip: string;
+        type: 'BLOCK' | 'UNBLOCK';
+    }>({ isOpen: false, ip: '', type: 'BLOCK' });
 
     // 1. Fetch the list when page loads
     const fetchBlocked = async () => {
@@ -18,11 +26,12 @@ export default function BlockedIPsPage() {
 
     useEffect(() => { fetchBlocked(); }, []);
 
-    // 2. Handle the "Block" button click
+    // 2. Handle Block (Direct Call)
     const handleBlock = async (e: React.FormEvent) => {
         e.preventDefault();
-        const token = localStorage.getItem('accessToken');
+        if (!newIP) return;
 
+        const token = localStorage.getItem('accessToken');
         const res = await fetch('http://127.0.0.1:8000/api/block-ip/', {
             method: 'POST',
             headers: {
@@ -35,9 +44,34 @@ export default function BlockedIPsPage() {
         if (res.ok) {
             setNewIP('');
             setReason('');
-            fetchBlocked(); // Refresh the list instantly
+            fetchBlocked();
         } else {
             alert("Failed to block IP");
+        }
+    };
+
+    // 3. Initiate Unblock (Opens Modal)
+    const initiateUnblock = (ip: string) => {
+        setModal({ isOpen: true, ip: ip, type: 'UNBLOCK' });
+    }
+
+    // 4. Handle Unblock Confirmation
+    const handleConfirmUnblock = async () => {
+        const token = localStorage.getItem('accessToken');
+        const res = await fetch('http://127.0.0.1:8000/api/unblock-ip/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ ip: modal.ip })
+        });
+
+        if (res.ok) {
+            setModal({ ...modal, isOpen: false });
+            fetchBlocked();
+        } else {
+            alert("Failed to unblock IP");
         }
     };
 
@@ -90,7 +124,9 @@ export default function BlockedIPsPage() {
                                 <td className="p-4 text-gray-400">{b.reason}</td>
                                 <td className="p-4 text-gray-500 text-sm">{new Date(b.date).toLocaleString()}</td>
                                 <td className="p-4">
-                                    <button className="text-gray-500 hover:text-green-500 transition">
+                                    <button
+                                        onClick={() => initiateUnblock(b.ip)}
+                                        className="text-gray-500 hover:text-green-500 transition">
                                         Unblock
                                     </button>
                                 </td>
@@ -104,6 +140,16 @@ export default function BlockedIPsPage() {
                     </tbody>
                 </table>
             </div>
+
+            <ConfirmationModal
+                isOpen={modal.isOpen}
+                onClose={() => setModal({ ...modal, isOpen: false })}
+                onConfirm={handleConfirmUnblock}
+                title="Confirm Unblock"
+                message={`Are you sure you want to unblock IP ${modal.ip}? This will allow traffic from this source.`}
+                confirmTextMatch={modal.ip}
+                confirmButtonText="UNBLOCK IP"
+            />
         </div>
     );
 }
