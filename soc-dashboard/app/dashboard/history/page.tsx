@@ -86,7 +86,11 @@ export default function HistoryPage() {
                         {activeTab === 'attacks' && data.attacks.map((item, i) => (
                             <tr key={i} className="hover:bg-gray-800/50">
                                 <td className="p-4 text-gray-500 text-sm">{new Date(item.date).toLocaleString()}</td>
-                                <td className="p-4 font-mono text-white">{item.ip}</td>
+                                <td className="p-4 font-mono text-white">
+                                    <div className="text-blue-400">SRC: {item.ip}</div>
+                                    <div className="text-gray-400 text-xs">🌍 {item.location || 'Local Network'}</div>
+                                    <div className="text-green-400 mt-1">DST: {item.dst_ip || '---'}</div>
+                                </td>
                                 <td className="p-4 text-red-300">{item.type}</td>
                                 <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${item.severity === 'CRITICAL' ? 'bg-red-900 text-red-200' : 'bg-yellow-900 text-yellow-200'}`}>{item.severity}</span></td>
                             </tr>

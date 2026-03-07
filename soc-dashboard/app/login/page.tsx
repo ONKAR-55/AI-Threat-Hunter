@@ -37,7 +37,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-6">
                     <Shield className="w-16 h-16 animate-pulse" />
                 </div>
-                <h2 className="text-2xl font-bold text-center mb-6">SECURE ACCESS</h2>
+                <h2 className="text-2xl font-bold text-center mb-6">I-GUARD ACCESS</h2>
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>

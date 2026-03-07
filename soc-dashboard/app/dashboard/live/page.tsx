@@ -99,17 +99,20 @@ export default function LiveMonitorPage() {
                             {/* Col 4-5: Severity */}
                             <div className="col-span-2">
                                 <span className={`px-2 py-1 rounded text-xs font-bold flex items-center gap-1 w-fit ${threat.severity === 'CRITICAL'
-                                        ? 'bg-red-950 text-red-400 border border-red-900'
-                                        : 'bg-yellow-950 text-yellow-400 border border-yellow-900'
+                                    ? 'bg-red-950 text-red-400 border border-red-900'
+                                    : 'bg-yellow-950 text-yellow-400 border border-yellow-900'
                                     }`}>
                                     {threat.severity === 'CRITICAL' ? <AlertTriangle size={12} /> : <Shield size={12} />}
                                     {threat.severity}
                                 </span>
                             </div>
 
-                            {/* Col 6-8: Source IP */}
-                            <div className="col-span-3 font-mono text-blue-400 text-sm flex items-center gap-2">
-                                <span className="text-gray-600">SRC:</span> {threat.ip}
+                            {/* Col 6-8: Source IP & Location */}
+                            <div className="col-span-3">
+                                <div className="font-mono text-blue-400 text-sm flex items-center gap-2">
+                                    <span className="text-gray-600">SRC:</span> {threat.ip}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">🌍 {threat.location || 'Unknown Location'}</div>
                             </div>
 
                             {/* Col 9-11: Destination IP */}

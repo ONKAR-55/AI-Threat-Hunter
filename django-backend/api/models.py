@@ -3,6 +3,7 @@ from django.db import models
 class Threat(models.Model):
     source_ip = models.GenericIPAddressField()
     destination_ip = models.GenericIPAddressField(null=True, blank=True)
+    location = models.CharField(max_length=150, default="Unknown", blank=True)
     attack_type = models.CharField(max_length=100)
     severity = models.CharField(max_length=20) # LOW, HIGH, CRITICAL
     timestamp = models.DateTimeField(auto_now_add=True)
