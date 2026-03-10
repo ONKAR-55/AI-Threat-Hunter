@@ -77,6 +77,8 @@ def get_threats(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def dashboard_stats(request):
+    recv_rate = 0
+    sent_rate = 0
     # Retrieve real system metrics
     try:
         import psutil
@@ -124,8 +126,10 @@ def dashboard_stats(request):
     }
 
     # 2. Chart Data: Attacks & Traffic per Hour (Last 24h)
-    import random
     trend_data = []
+    
+    # We will try to provide a baseline for the graph using the last hour's average traffic spread out,
+    # or just show actual threat counts since we are no longer simulating random data.
     for i in range(24, -1, -1):
         hour_time = timezone.now() - timedelta(hours=i)
         hour_str = hour_time.strftime("%H:00")
@@ -137,13 +141,14 @@ def dashboard_stats(request):
             timestamp__hour=hour_time.hour
         ).count()
         
-        # Simulate network traffic to provide full graph baseline
-        simulated_traffic = (threats_in_hour * random.randint(15, 30)) + random.randint(500, 2000)
-        
+        # Real Traffic Baseline Check: If we have an active recv_rate, use a fraction of it as an aesthetic base, 
+        # otherwise default to 0 to prevent fake scaling.
+        real_traffic = recv_rate + sent_rate if (recv_rate > 0 or sent_rate > 0) else 0
+
         trend_data.append({
             "time": hour_str,
             "threats": threats_in_hour,
-            "traffic": simulated_traffic
+            "traffic": int(real_traffic) if i == 0 else 0  # Only show live traffic on the most recent edge
         })
 
     stats['chart_trend'] = trend_data

@@ -6,6 +6,7 @@ import {
     PieChart, Pie, Cell, Legend
 } from 'recharts';
 import { ShieldAlert, Activity, Server, Lock, ArrowUp, Zap, Bot, Send } from 'lucide-react';
+import Link from 'next/link';
 
 // Color Palette for Pie Chart
 const COLORS = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6'];
@@ -15,6 +16,8 @@ export default function DashboardHome() {
     const router = useRouter();
 
     useEffect(() => {
+        let intervalId: NodeJS.Timeout;
+
         const fetchStats = async () => {
             const token = localStorage.getItem('accessToken');
             if (!token) return router.push('/login');
@@ -29,15 +32,17 @@ export default function DashboardHome() {
                     localStorage.removeItem('accessToken');
                     router.push('/login');
                 } else {
-                    console.error("Backend returned error:", await res.text());
-                    setStats({ error: true }); // Prevent infinite loading state
+                    setStats((prev: any) => prev || { error: true });
                 }
             } catch (err) {
-                console.error("Network error:", err);
-                setStats({ error: true });
+                setStats((prev: any) => prev || { error: true });
             }
         };
-        fetchStats();
+
+        fetchStats(); // Initial fetch
+        intervalId = setInterval(fetchStats, 3000); // Poll every 3 seconds
+
+        return () => clearInterval(intervalId); // Cleanup on unmount
     }, [router]);
 
     if (!stats) return <div className="p-10 text-green-500 font-mono animate-pulse">Initializing Command Center...</div>;
@@ -47,22 +52,30 @@ export default function DashboardHome() {
         <div className="space-y-6">
             {/* 1. TOP STATS ROW */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <StatCard title="Total Threats" value={stats.total_threats || 0} icon={<ShieldAlert className="text-red-500" />} />
-                <StatCard title="Active Blocks" value={stats.blocked_ips || 0} icon={<Lock className="text-orange-500" />} />
-                <StatCard title="System Load" value={stats.system_load || "N/A"} icon={<Activity className="text-blue-500" />} />
-                <div className="bg-gray-900 p-6 rounded border border-green-900/30 relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-linear-to-r from-green-900/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                    <div className="text-gray-400 text-sm mb-1 flex justify-between">
-                        <span>Traffic (In | Out)</span>
-                        <Zap size={16} className="text-yellow-400" />
+                <Link href="/dashboard/threats" className="block focus:outline-none focus:ring-2 focus:ring-green-500 rounded">
+                    <StatCard title="Total Threats" value={stats.total_threats || 0} icon={<ShieldAlert className="text-red-500" />} />
+                </Link>
+                <Link href="/dashboard/blocked" className="block focus:outline-none focus:ring-2 focus:ring-green-500 rounded">
+                    <StatCard title="Active Blocks" value={stats.blocked_ips || 0} icon={<Lock className="text-orange-500" />} />
+                </Link>
+                <Link href="/dashboard/system-load" className="block focus:outline-none focus:ring-2 focus:ring-green-500 rounded">
+                    <StatCard title="System Load" value={stats.system_load || "N/A"} icon={<Activity className="text-blue-500" />} />
+                </Link>
+                <Link href="/dashboard/traffic" className="block focus:outline-none focus:ring-2 focus:ring-green-500 rounded">
+                    <div className="bg-gray-900 p-6 rounded border border-green-900/30 relative overflow-hidden group hover:border-green-800 transition-colors">
+                        <div className="absolute inset-0 bg-linear-to-r from-green-900/10 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                        <div className="text-gray-400 text-sm mb-1 flex justify-between">
+                            <span>Traffic (In | Out)</span>
+                            <Zap size={16} className="text-yellow-400" />
+                        </div>
+                        <div className="text-2xl font-bold text-white mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                            {stats.traffic_in || "0"} <span className="text-gray-500 text-sm">|</span> {stats.traffic_out || "0"} <span className="text-gray-500 text-sm">pkts/s</span>
+                        </div>
+                        <div className="text-xs text-green-400 flex items-center gap-1">
+                            <ArrowUp size={12} /> Live hardware traffic
+                        </div>
                     </div>
-                    <div className="text-2xl font-bold text-white mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {stats.traffic_in || "0"} <span className="text-gray-500 text-sm">|</span> {stats.traffic_out || "0"} <span className="text-gray-500 text-sm">pkts/s</span>
-                    </div>
-                    <div className="text-xs text-green-400 flex items-center gap-1">
-                        <ArrowUp size={12} /> +12% from last hour
-                    </div>
-                </div>
+                </Link>
             </div>
 
             {/* 2. MAIN DASHBOARD CONTENT */}
