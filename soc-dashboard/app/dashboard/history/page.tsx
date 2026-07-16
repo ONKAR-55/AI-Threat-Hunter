@@ -3,11 +3,21 @@ import { useEffect, useState } from 'react';
 import { FileText, ShieldAlert, Lock, Clock, Trash2 } from 'lucide-react';
 import ConfirmationModal from '../../components/ConfirmationModal';
 
+/**
+ * HistoryPage Component
+ * Provides historical audit logs across three categories:
+ * 1. Attacks (`attacks`): Past sniffer detections and threat classifications.
+ * 2. Blocks (`blocks`): History of IP block/unblock actions.
+ * 3. System Logs (`logs`): General background and component telemetry logs.
+ */
 export default function HistoryPage() {
-    const [activeTab, setActiveTab] = useState('attacks'); // attacks | blocks | logs
-    const [data, setData] = useState<{ attacks: any[], blocks: any[], logs: any[] } | null>(null);
+    const [activeTab, setActiveTab] = useState('suspicious'); // suspicious | blocks | logs
+    const [data, setData] = useState<{ suspicious?: any[], attacks?: any[], blocks: any[], logs: any[] } | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+    /**
+     * Retrieves historical archives across all three categories (`GET /api/history/`).
+     */
     const fetchData = async () => {
         const token = localStorage.getItem('accessToken');
         const res = await fetch('http://127.0.0.1:8000/api/history/', {
@@ -20,15 +30,20 @@ export default function HistoryPage() {
         fetchData();
     }, []);
 
+    /**
+     * Purges all records for the currently selected audit category (`POST /api/clear-history/`).
+     */
     const handleDeleteHistory = async () => {
         const token = localStorage.getItem('accessToken');
+        // Map suspicious tab back to backend type if needed
+        const payloadType = activeTab === 'suspicious' ? 'attacks' : activeTab;
         const res = await fetch('http://127.0.0.1:8000/api/clear-history/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ type: activeTab })
+            body: JSON.stringify({ type: payloadType })
         });
 
         if (res.ok) {
@@ -40,13 +55,15 @@ export default function HistoryPage() {
     };
 
     const getDeleteMessage = () => {
-        if (activeTab === 'attacks') return "This will permanently delete all threat detection logs.";
+        if (activeTab === 'suspicious' || activeTab === 'attacks') return "This will permanently delete all suspicious activity logs.";
         if (activeTab === 'blocks') return "This will permanently delete all blocked/unblocked IP records.";
         if (activeTab === 'logs') return "This will permanently delete all system logs.";
         return "Delete history?";
     };
 
     if (!data) return <div className="p-10 text-green-500 font-mono animate-pulse">Loading Archives...</div>;
+
+    const suspiciousList = data.suspicious || data.attacks || [];
 
     return (
         <div>
@@ -58,13 +75,13 @@ export default function HistoryPage() {
                     onClick={() => setIsDeleteModalOpen(true)}
                     className="bg-red-900/30 text-red-500 border border-red-900 px-4 py-2 rounded hover:bg-red-900/50 flex items-center gap-2 transition"
                 >
-                    <Trash2 size={16} /> Clear {activeTab}
+                    <Trash2 size={16} /> Clear {activeTab === 'suspicious' ? 'Suspicious Logs' : activeTab}
                 </button>
             </div>
 
             {/* Tabs */}
             <div className="flex gap-4 mb-6 border-b border-green-900 pb-1">
-                <TabButton label="Attack History" icon={<ShieldAlert size={18} />} active={activeTab === 'attacks'} onClick={() => setActiveTab('attacks')} />
+                <TabButton label="Suspicious Activity History" icon={<ShieldAlert size={18} />} active={activeTab === 'suspicious'} onClick={() => setActiveTab('suspicious')} />
                 <TabButton label="Block History" icon={<Lock size={18} />} active={activeTab === 'blocks'} onClick={() => setActiveTab('blocks')} />
                 <TabButton label="System Logs" icon={<FileText size={18} />} active={activeTab === 'logs'} onClick={() => setActiveTab('logs')} />
             </div>
@@ -82,8 +99,8 @@ export default function HistoryPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-800">
 
-                        {/* VIEW 1: ATTACKS */}
-                        {activeTab === 'attacks' && data.attacks.map((item, i) => (
+                        {/* VIEW 1: SUSPICIOUS ACTIVITIES */}
+                        {activeTab === 'suspicious' && suspiciousList.map((item, i) => (
                             <tr key={i} className="hover:bg-gray-800/50">
                                 <td className="p-4 text-gray-500 text-sm">{new Date(item.date).toLocaleString()}</td>
                                 <td className="p-4 font-mono text-white">
@@ -95,8 +112,8 @@ export default function HistoryPage() {
                                 <td className="p-4"><span className={`px-2 py-1 rounded text-xs ${item.severity === 'CRITICAL' ? 'bg-red-900 text-red-200' : 'bg-yellow-900 text-yellow-200'}`}>{item.severity}</span></td>
                             </tr>
                         ))}
-                        {activeTab === 'attacks' && data.attacks.length === 0 && (
-                            <tr><td colSpan={4} className="p-8 text-center text-gray-500">No attack history found.</td></tr>
+                        {activeTab === 'suspicious' && suspiciousList.length === 0 && (
+                            <tr><td colSpan={4} className="p-8 text-center text-gray-500">No suspicious activity history found.</td></tr>
                         )}
 
                         {/* VIEW 2: BLOCKS */}

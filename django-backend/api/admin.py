@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import SuspiciousActivity, BlockedIP, GeneralLog
 
-# Register your models here.
+admin.site.register(SuspiciousActivity)
+admin.site.register(BlockedIP)
+admin.site.register(GeneralLog)

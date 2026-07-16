@@ -1,6 +1,6 @@
 from django.db import models
 
-class Threat(models.Model):
+class SuspiciousActivity(models.Model):
     source_ip = models.GenericIPAddressField()
     destination_ip = models.GenericIPAddressField(null=True, blank=True)
     location = models.CharField(max_length=150, default="Unknown", blank=True)
@@ -8,8 +8,16 @@ class Threat(models.Model):
     severity = models.CharField(max_length=20) # LOW, HIGH, CRITICAL
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        db_table = 'api_threat'
+        verbose_name = 'Suspicious Activity'
+        verbose_name_plural = 'Suspicious Activities'
+
     def __str__(self):
         return f"{self.attack_type} from {self.source_ip}"
+
+# Backward-compatibility alias
+Threat = SuspiciousActivity
 
 from django.contrib.auth.models import User
 

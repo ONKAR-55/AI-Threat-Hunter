@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Shield, ShieldAlert, Lock, FileText, LogOut, Activity } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
+import { AlertsProvider } from './AlertsContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [time, setTime] = useState<Date | null>(null);
@@ -41,8 +42,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <ShieldAlert className="text-green-500 w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-white">I-<span className="text-green-500">GUARD</span></h1>
-                        <span className="text-[10px] text-gray-500 uppercase tracking-widest">AI Security Ops</span>
+                        <h1 className="text-xl font-bold tracking-tight text-white">SOC-<span className="text-green-500">GUARD</span></h1>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-widest">Network Security Ops</span>
                     </div>
                 </div>
 
@@ -75,14 +76,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <span className="font-medium">Logout</span>
                     </button>
                     <div className="mt-4 text-xs text-center text-gray-600">
-                        v1.2.0 • Stable
+                        v1.0.0 • Stable
                     </div>
                 </div>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 overflow-y-auto bg-black p-8">
-                {children}
+                <AlertsProvider>
+                    {children}
+                </AlertsProvider>
             </main>
         </div>
     );

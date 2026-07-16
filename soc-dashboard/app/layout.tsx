@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "I-GUARD | AI Security Operations",
-  description: "Advanced AI-driven Network Monitoring and Threat Hunting Platform (Powered by Reflex)",
+  title: "SOC-GUARD | Network Security Operations",
+  description: "Advanced Network Monitoring and Suspicious Activity Detection Platform",
 };
 
 export default function RootLayout({

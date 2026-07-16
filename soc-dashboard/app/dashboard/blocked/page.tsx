@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 import { ShieldBan, Trash2, Plus } from 'lucide-react';
 import ConfirmationModal from '../../components/ConfirmationModal';
 
+/**
+ * BlockedIPsPage Component
+ * Provides full CRUD management of blocked source IP addresses.
+ * Allows security operators to manually add new IP blocks and revoke/unblock existing entries.
+ */
 export default function BlockedIPsPage() {
     const [blockedIPs, setBlockedIPs] = useState<any[]>([]);
     const [newIP, setNewIP] = useState('');
@@ -15,7 +20,9 @@ export default function BlockedIPsPage() {
         type: 'BLOCK' | 'UNBLOCK';
     }>({ isOpen: false, ip: '', type: 'BLOCK' });
 
-    // 1. Fetch the list when page loads
+    /**
+     * Fetches the complete list of actively blocked IP addresses (`GET /api/blocked/`).
+     */
     const fetchBlocked = async () => {
         const token = localStorage.getItem('accessToken');
         const res = await fetch('http://127.0.0.1:8000/api/blocked/', {
@@ -26,7 +33,9 @@ export default function BlockedIPsPage() {
 
     useEffect(() => { fetchBlocked(); }, []);
 
-    // 2. Handle Block (Direct Call)
+    /**
+     * Submits a manual IP block via form submission (`POST /api/block-ip/`).
+     */
     const handleBlock = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newIP) return;
@@ -50,12 +59,16 @@ export default function BlockedIPsPage() {
         }
     };
 
-    // 3. Initiate Unblock (Opens Modal)
+    /**
+     * Opens the confirmation dialog before unblocking an IP.
+     */
     const initiateUnblock = (ip: string) => {
         setModal({ isOpen: true, ip: ip, type: 'UNBLOCK' });
     }
 
-    // 4. Handle Unblock Confirmation
+    /**
+     * Confirms and sends IP unblock request (`POST /api/unblock-ip/`) upon modal approval.
+     */
     const handleConfirmUnblock = async () => {
         const token = localStorage.getItem('accessToken');
         const res = await fetch('http://127.0.0.1:8000/api/unblock-ip/', {

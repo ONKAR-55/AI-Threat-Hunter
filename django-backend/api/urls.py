@@ -3,7 +3,9 @@ from . import views
 
 urlpatterns = [
     path('ingest-log/', views.ingest_log, name='ingest_log'),
-    path('threats/', views.get_threats, name='get_threats'),
+    path('ingest-packet-stats/', views.ingest_packet_stats, name='ingest_packet_stats'),
+    path('threats/', views.get_suspicious, name='get_threats'),
+    path('suspicious/', views.get_suspicious, name='get_suspicious'),
     path('stats/', views.dashboard_stats, name='dashboard_stats'),
     path('ingest-system-log/', views.ingest_system_log, name='ingest_system_log'),
     path('blocked/', views.get_blocked_ips, name='get_blocked_ips'),
