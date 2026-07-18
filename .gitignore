@@ -1,8 +1,32 @@
-./agents/venv
-./agents/__pycache__
-./django/venv
-./django/db.sqlite3
-./django/core/__pycache__
-./django/api/__pycache__
-./django/api/migrations
-./django/core/migrations
+./CHANGELOG.txt
+
+# Python Virtual Environments
+.venv/
+venv/
+env/
+./agents/venv/
+./django-backend/venv/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+./django-backend/db.sqlite3
+./django-backend/api/migrations/
+./django-backend/core/migrations/
+
+# Next.js & Node
+node_modules/
+.next/
+out/
+build/
+.env*
+.env.local
+soc-dashboard/node_modules/
+soc-dashboard/.next/
+
+# OS generated files
+.DS_Store
+Thumbs.db
